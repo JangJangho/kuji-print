@@ -1,0 +1,701 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<title>쿠지 인쇄판</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Do+Hyeon&family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans+KR:wght@400;500;600&display=swap">
+<style>
+/* Layout: step cards on the left, a cutting-mat preview on the right (stacked on phones). */
+:root {
+  --bg: #e9eeea;
+  --surface: #ffffff;
+  --ink: #1b241f;
+  --muted: #5a6a61;
+  --line: #d1dbd4;
+  --accent: #1d6b4b;
+  --accent-ink: #ffffff;
+  --accent-soft: #dcebe3;
+  --warn: #9a4f06;
+  --warn-soft: #f7ead9;
+  --mat: #2b5d46;
+  --mat-grid: rgba(255,255,255,.13);
+  --font-display: "Do Hyeon", "IBM Plex Sans KR", system-ui, sans-serif;
+  --font-body: "IBM Plex Sans KR", system-ui, -apple-system, "Noto Sans KR", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #111613; --surface: #19201c; --ink: #e3ebe6; --muted: #93a399; --line: #2b3530;
+    --accent: #4db584; --accent-ink: #08140e; --accent-soft: #1d3329;
+    --warn: #e6a65a; --warn-soft: #33261a; --mat: #173426; --mat-grid: rgba(255,255,255,.08);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #111613; --surface: #19201c; --ink: #e3ebe6; --muted: #93a399; --line: #2b3530;
+  --accent: #4db584; --accent-ink: #08140e; --accent-soft: #1d3329;
+  --warn: #e6a65a; --warn-soft: #33261a; --mat: #173426; --mat-grid: rgba(255,255,255,.08);
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 15px; line-height: 1.55; }
+.wrap { max-width: 1180px; margin: 0 auto; padding-block: 20px 48px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+header { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 8px 20px; margin-bottom: 18px; }
+h1 { font-family: var(--font-display); font-weight: 400; font-size: 2.1rem; line-height: 1.1; margin: 0; letter-spacing: -.01em; }
+header p { margin: 4px 0 0; color: var(--muted); }
+.mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.spec { font-size: .82rem; color: var(--accent); background: var(--accent-soft); padding: 4px 10px; border-radius: 999px; white-space: nowrap; }
+
+.layout { display: grid; gap: 14px; grid-template-columns: minmax(0, 1fr); grid-template-areas: "s1" "s2" "s3" "s4"; }
+@media (min-width: 920px) {
+  .layout { grid-template-columns: minmax(0, 430px) minmax(0, 1fr); grid-template-areas: "s1 s3" "s2 s3" "s4 s3"; align-items: start; }
+  .s3 { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 12px); }
+}
+.s1 { grid-area: s1; } .s2 { grid-area: s2; } .s3 { grid-area: s3; } .s4 { grid-area: s4; }
+
+.step { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.step-h { display: flex; align-items: center; gap: 10px; }
+.num { width: 26px; height: 26px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; font-family: var(--font-mono); font-size: .85rem; flex: none; }
+h2 { font-family: var(--font-display); font-weight: 400; font-size: 1.3rem; margin: 0; }
+.hint { margin: 0; color: var(--muted); font-size: .9rem; }
+
+.drop { display: flex; align-items: center; gap: 14px; border: 1.5px dashed var(--line); border-radius: 10px; padding: 10px; cursor: pointer; }
+.drop:hover { border-color: var(--accent); }
+.drop img { width: 112px; aspect-ratio: 7 / 5; object-fit: cover; border-radius: 6px; background: var(--bg); flex: none; max-width: 40%; }
+.drop .t { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.drop strong { font-weight: 600; }
+.drop small { color: var(--muted); overflow-wrap: anywhere; }
+
+.tag { display: inline-block; font-size: .72rem; font-weight: 600; padding: 1px 7px; border-radius: 999px; background: var(--warn-soft); color: var(--warn); letter-spacing: .02em; }
+.msg { font-size: .88rem; margin: 0; }
+.msg.warn { color: var(--warn); }
+.msg.ok { color: var(--accent); }
+
+.results { display: flex; flex-direction: column; gap: 8px; }
+.r-item { display: grid; grid-template-columns: 52px minmax(0, 1fr) auto auto; align-items: center; gap: 10px; padding: 8px; border: 1px solid var(--line); border-radius: 10px; }
+.r-item img { width: 52px; height: 52px; object-fit: contain; border-radius: 50%; background: var(--bg); }
+.r-item.square img { border-radius: 6px; }
+.r-name { font-size: .9rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.stepper { display: inline-flex; align-items: center; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.stepper button { width: 32px; height: 32px; border: 0; background: transparent; color: var(--ink); font-size: 1.1rem; cursor: pointer; }
+.stepper button:hover { background: var(--accent-soft); }
+.stepper input { width: 40px; height: 32px; border: 0; border-inline: 1px solid var(--line); background: transparent; color: var(--ink); text-align: center; font-family: var(--font-mono); font-size: .9rem; -moz-appearance: textfield; }
+.stepper input::-webkit-outer-spin-button, .stepper input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.icon-btn { width: 32px; height: 32px; border: 0; border-radius: 8px; background: transparent; color: var(--muted); font-size: 1.2rem; cursor: pointer; }
+.icon-btn:hover { background: var(--warn-soft); color: var(--warn); }
+
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 42px; padding: 0 16px; border-radius: 10px; border: 1px solid var(--accent); background: var(--accent); color: var(--accent-ink); font: 600 .95rem var(--font-body); cursor: pointer; text-align: center; }
+.btn.ghost { background: transparent; color: var(--accent); }
+.btn.big { min-height: 52px; font-size: 1.05rem; width: 100%; }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+.btn:hover:not(:disabled) { filter: brightness(1.06); }
+.tally { font-size: .88rem; padding: 8px 10px; border-radius: 8px; background: var(--accent-soft); color: var(--accent); }
+.tally.warn { background: var(--warn-soft); color: var(--warn); }
+
+.field { display: flex; flex-direction: column; gap: 6px; }
+.field > .lbl { display: flex; justify-content: space-between; align-items: baseline; font-size: .9rem; font-weight: 500; }
+.field output { font-family: var(--font-mono); font-size: .85rem; color: var(--accent); }
+input[type="range"] { width: 100%; accent-color: var(--accent); }
+.seg { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--line); border-radius: 10px; padding: 3px; gap: 3px; }
+.seg input { position: absolute; opacity: 0; pointer-events: none; }
+.seg label { text-align: center; padding: 7px 4px; border-radius: 7px; font-size: .9rem; cursor: pointer; color: var(--muted); }
+.seg input:checked + label { background: var(--accent); color: var(--accent-ink); }
+.seg input:focus-visible + label { outline: 2px solid var(--accent); outline-offset: 2px; }
+.check { display: flex; align-items: flex-start; gap: 9px; font-size: .92rem; cursor: pointer; }
+.check input { width: 18px; height: 18px; margin: 2px 0 0; accent-color: var(--accent); flex: none; }
+.check small { display: block; color: var(--muted); font-size: .8rem; }
+
+.tabs { display: flex; gap: 4px; flex-wrap: wrap; }
+.tabs button { border: 1px solid var(--line); background: transparent; color: var(--muted); padding: 6px 12px; border-radius: 999px; font: 500 .88rem var(--font-body); cursor: pointer; }
+.tabs button[aria-selected="true"] { background: var(--ink); color: var(--surface); border-color: var(--ink); }
+.mat { border-radius: 10px; background-color: var(--mat); background-image: linear-gradient(var(--mat-grid) 1px, transparent 1px), linear-gradient(90deg, var(--mat-grid) 1px, transparent 1px); background-size: 18px 18px; padding: 18px; display: grid; place-items: center; min-height: 240px; overflow: hidden; }
+.mat canvas { display: block; width: 100%; height: auto; max-width: 100%; }
+.mat canvas.sheet { box-shadow: 0 6px 18px rgba(0,0,0,.35); background: #fff; }
+.mat canvas.card { max-width: 440px; }
+.pv-foot { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; font-size: .85rem; color: var(--muted); }
+.pager { display: inline-flex; align-items: center; gap: 6px; }
+.pager button { width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--line); background: transparent; color: var(--ink); cursor: pointer; }
+.pager button:disabled { opacity: .35; cursor: default; }
+
+details { border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
+summary { cursor: pointer; font-weight: 500; font-size: .92rem; }
+.dims { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; margin-top: 10px; }
+.dims label { display: flex; flex-direction: column; gap: 4px; font-size: .82rem; color: var(--muted); }
+.dims input { height: 36px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); padding: 0 10px; font-family: var(--font-mono); font-size: .9rem; width: 100%; }
+.row { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.status { font-size: .9rem; min-height: 1.4em; margin: 0; }
+.status.err { color: var(--warn); }
+.status.ok { color: var(--accent); }
+ol.tips { margin: 0; padding-left: 1.3em; display: flex; flex-direction: column; gap: 4px; font-size: .88rem; color: var(--muted); }
+ol.tips b { color: var(--ink); font-weight: 600; }
+button:focus-visible, .btn:focus-visible, .drop:focus-within, input:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <div>
+      <h1>쿠지 인쇄판</h1>
+      <p>앞판 그림과 결과 그림만 넣으면 A4 인쇄용 PDF를 만들어요.</p>
+    </div>
+    <span class="spec mono" id="specLine">70 × 50 mm · A4 한 장에 16개</span>
+  </header>
+
+  <main class="layout">
+    <section class="step s1" aria-labelledby="h1s">
+      <div class="step-h"><span class="num">1</span><h2 id="h1s">앞판 그림</h2></div>
+      <p class="hint">띠가 덮고 있는 겉면 그림이에요. 가로:세로 7:5 비율이면 칸에 꽉 차게 들어가요.</p>
+      <label class="drop" for="frontInput">
+        <img id="frontThumb" alt="앞판 그림 미리보기">
+        <span class="t">
+          <strong id="frontTitle">앞판 그림 고르기</strong>
+          <small id="frontSub">눌러서 사진이나 그림 파일을 선택하세요</small>
+        </span>
+      </label>
+      <input type="file" id="frontInput" accept="image/*" hidden>
+      <p class="msg" id="frontMsg"></p>
+    </section>
+
+    <section class="step s2" aria-labelledby="h2s">
+      <div class="step-h"><span class="num">2</span><h2 id="h2s">결과 그림</h2></div>
+      <p class="hint">띠를 뜯으면 나오는 그림이에요. 여러 개를 넣고 그림마다 몇 장씩 넣을지 정할 수 있어요.</p>
+      <div class="results" id="resultList"></div>
+      <label class="btn ghost" for="resultInput">+ 결과 그림 추가</label>
+      <input type="file" id="resultInput" accept="image/*" multiple hidden>
+      <div class="tally" id="tally"></div>
+
+      <div class="field">
+        <span class="lbl">모양</span>
+        <div class="seg" role="radiogroup" aria-label="결과 그림 모양">
+          <input type="radio" name="shape" id="shapeCircle" value="circle" checked><label for="shapeCircle">원형으로 자르기</label>
+          <input type="radio" name="shape" id="shapeOrig" value="orig"><label for="shapeOrig">원본 모양 그대로</label>
+        </div>
+      </div>
+      <div class="field">
+        <span class="lbl"><label for="sizeRange">크기 (원 지름 / 높이)</label><output id="sizeOut" class="mono">28 mm</output></span>
+        <input type="range" id="sizeRange" min="14" max="32" step="1" value="28">
+      </div>
+      <div class="field">
+        <span class="lbl"><label for="edgeRange">가장자리 잘라내기</label><output id="edgeOut" class="mono">5%</output></span>
+        <input type="range" id="edgeRange" min="0" max="20" step="1" value="5">
+      </div>
+      <label class="check"><input type="checkbox" id="trimChk" checked><span>흰 여백 자동 제거<small>스티커 사진처럼 그림 둘레에 흰 배경이 있으면 잘라내요</small></span></label>
+    </section>
+
+    <section class="step s3" aria-labelledby="h3s">
+      <div class="step-h"><span class="num">3</span><h2 id="h3s">미리보기</h2></div>
+      <div class="tabs" role="tablist" aria-label="미리보기 종류">
+        <button role="tab" id="tabOpen" aria-selected="true" data-view="open">뜯은 모습</button>
+        <button role="tab" id="tabFront" aria-selected="false" data-view="front">앞판 인쇄면</button>
+        <button role="tab" id="tabBack" aria-selected="false" data-view="back">뒷판 인쇄면</button>
+      </div>
+      <div class="mat"><canvas id="pv" class="card" aria-label="미리보기"></canvas></div>
+      <div class="pv-foot">
+        <span id="pvCaption">띠를 뜯었을 때 결과 그림이 이렇게 보여요.</span>
+        <span class="pager" id="pager" hidden>
+          <button id="pgPrev" aria-label="이전 뒷판">‹</button>
+          <span class="mono" id="pgLabel">1 / 1</span>
+          <button id="pgNext" aria-label="다음 뒷판">›</button>
+        </span>
+      </div>
+    </section>
+
+    <section class="step s4" aria-labelledby="h4s">
+      <div class="step-h"><span class="num">4</span><h2 id="h4s">PDF 만들기</h2></div>
+      <div class="row">
+        <span>
+          <strong>인쇄 장수</strong><br>
+          <small class="hint" id="sheetHint">앞판 1장 + 뒷판 1장 · 쿠지 16개</small>
+        </span>
+        <span class="stepper">
+          <button type="button" id="shMinus" aria-label="장수 줄이기">−</button>
+          <input type="number" id="sheetsInput" min="1" max="10" value="1" aria-label="인쇄 장수">
+          <button type="button" id="shPlus" aria-label="장수 늘리기">+</button>
+        </span>
+      </div>
+      <label class="check"><input type="checkbox" id="guideChk" checked><span>앞판에 절취선·접는 선 표시<small>그림 위에 반투명 흰 선으로 얇게 들어가요</small></span></label>
+      <label class="check"><input type="checkbox" id="cutChk" checked><span>뒷판에 자르는 선 표시<small>둥근 모서리 테두리를 그려요</small></span></label>
+      <details>
+        <summary>치수 바꾸기</summary>
+        <div class="dims">
+          <label>완성 가로 (mm)<input type="number" id="dCw" value="70" min="30" max="140" step="1"></label>
+          <label>완성 세로 (mm)<input type="number" id="dCh" value="50" min="20" max="100" step="1"></label>
+          <label>절취선 위아래 여백<input type="number" id="dBand" value="8" min="3" max="30" step="0.5"></label>
+          <label>접는 선 (오른쪽에서)<input type="number" id="dHinge" value="8" min="3" max="40" step="0.5"></label>
+          <label>모서리 둥글기<input type="number" id="dR" value="4" min="0" max="10" step="0.5"></label>
+        </div>
+      </details>
+      <button class="btn big" id="makeBtn">PDF 만들기</button>
+      <p class="status" id="status" role="status"></p>
+      <ol class="tips">
+        <li>인쇄할 때 배율을 <b>실제 크기(100%)</b>로 맞춰요.</li>
+        <li>바깥 여백의 재단 표시를 따라 자르고, 모서리를 둥글게 다듬어요.</li>
+        <li>앞판의 절취선에 커팅 휠이나 송곳으로 구멍을 내요.</li>
+        <li>앞판 <b>위아래 여백과 오른쪽 접는 부분에만</b> 풀칠해서 뒷판에 붙여요. 가운데 띠에 풀이 묻으면 안 열려요.</li>
+      </ol>
+    </section>
+  </main>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+(function () {
+  "use strict";
+  var PAGE = { w: 297, h: 210 };
+  var BLEED = 2, CHAMF = 3, MINMARGIN = 4;
+  var $ = function (id) { return document.getElementById(id); };
+
+  var S = {
+    front: null, frontSample: true, frontName: "",
+    results: [], shape: "circle", size: 28, edge: 5, trim: true,
+    sheets: 1, guides: true, cutlines: true,
+    dims: { cw: 70, ch: 50, band: 8, hinge: 8, r: 4 },
+    view: "open", backPage: 0
+  };
+
+  /* ---------- geometry ---------- */
+  function layout() {
+    var d = S.dims;
+    var cols = Math.max(1, Math.floor((PAGE.w - 2 * MINMARGIN) / d.cw));
+    var rows = Math.max(1, Math.floor((PAGE.h - 2 * MINMARGIN) / d.ch));
+    return { cw: d.cw, ch: d.ch, band: d.band, hinge: d.hinge, r: d.r, cols: cols, rows: rows,
+      per: cols * rows, ox: (PAGE.w - cols * d.cw) / 2, oy: (PAGE.h - rows * d.ch) / 2 };
+  }
+  function maxSize(L) { return Math.max(10, Math.floor(Math.min(L.ch - 2 * L.band, L.cw - L.hinge) - 2)); }
+
+  /* ---------- images ---------- */
+  function toCanvas(img, maxSide) {
+    var w = img.naturalWidth || img.width, h = img.naturalHeight || img.height;
+    var s = Math.min(1, maxSide / Math.max(w, h));
+    var c = document.createElement("canvas");
+    c.width = Math.max(1, Math.round(w * s)); c.height = Math.max(1, Math.round(h * s));
+    c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+    return c;
+  }
+  function loadFile(file, maxSide) {
+    return new Promise(function (res, rej) {
+      var url = URL.createObjectURL(file);
+      var img = new Image();
+      img.onload = function () { var c = toCanvas(img, maxSide); URL.revokeObjectURL(url); res(c); };
+      img.onerror = function () { URL.revokeObjectURL(url); rej(new Error("이 파일은 그림으로 열 수 없어요. JPG나 PNG 파일을 골라주세요.")); };
+      img.src = url;
+    });
+  }
+  function contentBox(cv) {
+    var n = 320, s = Math.min(1, n / Math.max(cv.width, cv.height));
+    var w = Math.max(1, Math.round(cv.width * s)), h = Math.max(1, Math.round(cv.height * s));
+    var t = document.createElement("canvas"); t.width = w; t.height = h;
+    var x = t.getContext("2d"); x.drawImage(cv, 0, 0, w, h);
+    var d = x.getImageData(0, 0, w, h).data;
+    var minX = w, minY = h, maxX = -1, maxY = -1;
+    for (var yy = 0; yy < h; yy++) for (var xx = 0; xx < w; xx++) {
+      var i = (yy * w + xx) * 4;
+      if (d[i + 3] < 24) continue;
+      if (d[i] + d[i + 1] + d[i + 2] > 640) continue;
+      if (xx < minX) minX = xx; if (xx > maxX) maxX = xx;
+      if (yy < minY) minY = yy; if (yy > maxY) maxY = yy;
+    }
+    if (maxX < 0) return { x: 0, y: 0, w: cv.width, h: cv.height };
+    return { x: minX / s, y: minY / s, w: (maxX - minX + 1) / s, h: (maxY - minY + 1) / s };
+  }
+  function srcRect(r) {
+    var b = S.trim ? r.box : { x: 0, y: 0, w: r.cv.width, h: r.cv.height };
+    var k = 1 - S.edge / 100, cx = b.x + b.w / 2, cy = b.y + b.h / 2;
+    if (S.shape === "circle") { var side = Math.max(b.w, b.h) * k; return { x: cx - side / 2, y: cy - side / 2, w: side, h: side }; }
+    return { x: cx - b.w * k / 2, y: cy - b.h * k / 2, w: b.w * k, h: b.h * k };
+  }
+  function thumbURL(r) {
+    var c = document.createElement("canvas"); c.width = c.height = 104;
+    var x = c.getContext("2d"); x.fillStyle = "#fff"; x.fillRect(0, 0, 104, 104);
+    var src = srcRect(r);
+    if (S.shape === "circle") { x.beginPath(); x.arc(52, 52, 52, 0, Math.PI * 2); x.clip(); x.drawImage(r.cv, src.x, src.y, src.w, src.h, 0, 0, 104, 104); }
+    else { var k = Math.min(100 / src.w, 100 / src.h), w = src.w * k, h = src.h * k; x.drawImage(r.cv, src.x, src.y, src.w, src.h, 52 - w / 2, 52 - h / 2, w, h); }
+    return c.toDataURL("image/png");
+  }
+
+  /* ---------- sample artwork (shown until real images are added) ---------- */
+  function rng(seed) { return function () { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; }; }
+  function sampleFront() {
+    var c = document.createElement("canvas"); c.width = 1400; c.height = 1000;
+    var x = c.getContext("2d"), r = rng(7);
+    var g = x.createLinearGradient(0, 0, 0, 1000); g.addColorStop(0, "#23466e"); g.addColorStop(1, "#16304d");
+    x.fillStyle = g; x.fillRect(0, 0, 1400, 1000);
+    var cols = ["#f2c14e", "#f78154", "#4d9de0", "#7bc96f", "#e15a97"];
+    for (var i = 0; i < 70; i++) { x.globalAlpha = .85; x.fillStyle = cols[i % cols.length]; x.beginPath(); x.arc(r() * 1400, r() * 1000, 10 + r() * 34, 0, Math.PI * 2); x.fill(); }
+    x.globalAlpha = 1; x.fillStyle = "rgba(10,20,35,.55)"; x.fillRect(0, 330, 1400, 340);
+    x.fillStyle = "#fff"; x.textAlign = "center"; x.textBaseline = "middle";
+    x.font = "150px 'Do Hyeon', sans-serif"; x.fillText("앞판 예시", 700, 455);
+    x.font = "60px 'IBM Plex Sans KR', sans-serif"; x.fillStyle = "#f2c14e"; x.fillText("7 : 5 그림을 넣어주세요", 700, 590);
+    return c;
+  }
+  function sampleResult(label, bg, fg) {
+    var c = document.createElement("canvas"); c.width = c.height = 600;
+    var x = c.getContext("2d"); x.fillStyle = "#fff"; x.fillRect(0, 0, 600, 600);
+    x.fillStyle = bg; x.beginPath(); x.arc(300, 300, 280, 0, Math.PI * 2); x.fill();
+    x.strokeStyle = "rgba(255,255,255,.6)"; x.lineWidth = 14; x.beginPath(); x.arc(300, 300, 230, 0, Math.PI * 2); x.stroke();
+    x.fillStyle = fg; x.textAlign = "center"; x.textBaseline = "middle"; x.font = "230px 'Do Hyeon', sans-serif"; x.fillText(label, 300, 315);
+    return c;
+  }
+  function makeSamples() {
+    if (S.frontSample) S.front = sampleFront();
+    var had = S.results.filter(function (r) { return r.sample; });
+    if (!S.results.length || had.length === S.results.length) {
+      var a = sampleResult("A상", "#f2c14e", "#3b2a00"), b = sampleResult("꽝", "#8a9bb0", "#ffffff");
+      var counts = had.length ? had.map(function (r) { return r.count; }) : [4, 12];
+      S.results = [
+        { cv: a, box: contentBox(a), count: counts[0], name: "A상", sample: true },
+        { cv: b, box: contentBox(b), count: counts[1], name: "꽝", sample: true }
+      ];
+    }
+  }
+
+  /* ---------- painting (shared by preview and PDF) ---------- */
+  function drawCover(ctx, img, x, y, w, h, s) {
+    var tw = w + 2 * BLEED, th = h + 2 * BLEED;
+    var k = Math.max(tw / img.width, th / img.height), dw = img.width * k, dh = img.height * k;
+    ctx.drawImage(img, (x + w / 2 - dw / 2) * s, (y + h / 2 - dh / 2) * s, dw * s, dh * s);
+  }
+  function paintFront(ctx, s, L) {
+    ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, PAGE.w * s, PAGE.h * s);
+    for (var j = 0; j < L.rows; j++) for (var i = 0; i < L.cols; i++) {
+      var x = L.ox + i * L.cw, y = L.oy + j * L.ch;
+      var l = i === 0 ? BLEED : 0, r = i === L.cols - 1 ? BLEED : 0, t = j === 0 ? BLEED : 0, b = j === L.rows - 1 ? BLEED : 0;
+      ctx.save(); ctx.beginPath(); ctx.rect((x - l) * s, (y - t) * s, (L.cw + l + r) * s, (L.ch + t + b) * s); ctx.clip();
+      drawCover(ctx, S.front, x, y, L.cw, L.ch, s); ctx.restore();
+    }
+  }
+  function drawResult(ctx, r, x, y, s, L) {
+    var cx = (x + (L.cw - L.hinge) / 2) * s, cy = (y + L.ch / 2) * s, src = srcRect(r);
+    if (S.shape === "circle") {
+      var D = S.size * s;
+      ctx.save(); ctx.beginPath(); ctx.arc(cx, cy, D / 2, 0, Math.PI * 2); ctx.clip();
+      ctx.fillStyle = "#fff"; ctx.fillRect(cx - D / 2, cy - D / 2, D, D);
+      ctx.drawImage(r.cv, src.x, src.y, src.w, src.h, cx - D / 2, cy - D / 2, D, D); ctx.restore();
+    } else {
+      var maxW = L.cw - L.hinge - 4, h = S.size, w = h * src.w / src.h;
+      if (w > maxW) { w = maxW; h = w * src.h / src.w; }
+      ctx.drawImage(r.cv, src.x, src.y, src.w, src.h, cx - w * s / 2, cy - h * s / 2, w * s, h * s);
+    }
+  }
+  function assignment() {
+    var arr = [];
+    S.results.forEach(function (r) { for (var i = 0; i < r.count; i++) arr.push(r); });
+    return arr;
+  }
+  function paintBack(ctx, s, L, page, assigned) {
+    ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, PAGE.w * s, PAGE.h * s);
+    var n = 0;
+    for (var j = 0; j < L.rows; j++) for (var i = 0; i < L.cols; i++, n++) {
+      var r = assigned[page * L.per + n];
+      if (r) drawResult(ctx, r, L.ox + i * L.cw, L.oy + j * L.ch, s, L);
+    }
+  }
+
+  /* line ops: {t:'l'|'rr', ..., st:{rgb,a,w,dash}} in mm, top-left origin */
+  var ST = {
+    perf: { rgb: [255, 255, 255], a: .78, w: .2, dash: [1.5, 1] },
+    hinge: { rgb: [255, 255, 255], a: .5, w: .2, dash: [3, 1, .6, 1] },
+    chamf: { rgb: [255, 255, 255], a: .85, w: .2 },
+    mark: { rgb: [0, 0, 0], a: 1, w: .1 },
+    tick: { rgb: [0, 0, 0], a: 1, w: .1, dash: [.8, .6] },
+    cut: { rgb: [0, 0, 0], a: 1, w: .14 }
+  };
+  function ln(x1, y1, x2, y2, st) { return { t: "l", x1: x1, y1: y1, x2: x2, y2: y2, st: st }; }
+  function cropMarks(L, perfTicks) {
+    var ops = [], X0 = L.ox, X1 = L.ox + L.cols * L.cw, Y0 = L.oy, Y1 = L.oy + L.rows * L.ch, g = BLEED + 1, len = 3.5;
+    function seg(a, b, lim) { // a: start, direction away from grid, clamp to stay 1mm inside paper
+      var end = b > a ? Math.min(lim - 1, b) : Math.max(1, b);
+      return Math.abs(end - a) >= 1 ? end : null;
+    }
+    for (var i = 0; i <= L.cols; i++) {
+      var X = L.ox + i * L.cw, e1 = seg(Y0 - g, Y0 - g - len, PAGE.h), e2 = seg(Y1 + g, Y1 + g + len, PAGE.h);
+      if (e1 !== null) ops.push(ln(X, Y0 - g, X, e1, ST.mark));
+      if (e2 !== null) ops.push(ln(X, Y1 + g, X, e2, ST.mark));
+    }
+    var rowYs = [];
+    for (var j = 0; j <= L.rows; j++) rowYs.push([L.oy + j * L.ch, ST.mark]);
+    if (perfTicks) for (var k = 0; k < L.rows; k++) { rowYs.push([L.oy + k * L.ch + L.band, ST.tick]); rowYs.push([L.oy + (k + 1) * L.ch - L.band, ST.tick]); }
+    rowYs.forEach(function (p) {
+      var e1 = seg(X0 - g, X0 - g - len, PAGE.w), e2 = seg(X1 + g, X1 + g + len, PAGE.w);
+      if (e1 !== null) ops.push(ln(X0 - g, p[0], e1, p[0], p[1]));
+      if (e2 !== null) ops.push(ln(X1 + g, p[0], e2, p[0], p[1]));
+    });
+    return ops;
+  }
+  function cellGuides(x, y, L) {
+    var top = y + L.band, bot = y + L.ch - L.band, hx = x + L.cw - L.hinge;
+    return [ln(x, top, hx, top, ST.perf), ln(x, bot, hx, bot, ST.perf), ln(hx, top, hx, bot, ST.hinge),
+      ln(x + CHAMF, top, x, top + CHAMF, ST.chamf), ln(x + CHAMF, bot, x, bot - CHAMF, ST.chamf)];
+  }
+  function frontOps(L) {
+    var ops = [];
+    if (S.guides) for (var j = 0; j < L.rows; j++) for (var i = 0; i < L.cols; i++) ops = ops.concat(cellGuides(L.ox + i * L.cw, L.oy + j * L.ch, L));
+    return ops.concat(cropMarks(L, true));
+  }
+  function backOps(L) {
+    var ops = [];
+    if (S.cutlines) for (var j = 0; j < L.rows; j++) for (var i = 0; i < L.cols; i++)
+      ops.push({ t: "rr", x: L.ox + i * L.cw, y: L.oy + j * L.ch, w: L.cw, h: L.ch, r: L.r, st: ST.cut });
+    return ops.concat(cropMarks(L, false));
+  }
+  function rrPath(ctx, x, y, w, h, r) {
+    r = Math.min(r, w / 2, h / 2);
+    ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
+  }
+  function strokeCanvas(ctx, ops, s) {
+    ops.forEach(function (o) {
+      ctx.save(); ctx.strokeStyle = "rgb(" + o.st.rgb.join(",") + ")"; ctx.globalAlpha = o.st.a;
+      ctx.lineWidth = Math.max(1, o.st.w * s); ctx.setLineDash((o.st.dash || []).map(function (d) { return d * s; }));
+      ctx.beginPath();
+      if (o.t === "l") { ctx.moveTo(o.x1 * s, o.y1 * s); ctx.lineTo(o.x2 * s, o.y2 * s); }
+      else rrPath(ctx, o.x * s, o.y * s, o.w * s, o.h * s, o.r * s);
+      ctx.stroke(); ctx.restore();
+    });
+  }
+  function strokePdf(doc, ops) {
+    ops.forEach(function (o) {
+      doc.setDrawColor(o.st.rgb[0], o.st.rgb[1], o.st.rgb[2]);
+      doc.setGState(new doc.GState({ "stroke-opacity": o.st.a }));
+      doc.setLineWidth(o.st.w);
+      doc.setLineDashPattern(o.st.dash || [], 0);
+      if (o.t === "l") doc.line(o.x1, o.y1, o.x2, o.y2, "S");
+      else doc.roundedRect(o.x, o.y, o.w, o.h, o.r, o.r, "S");
+    });
+    doc.setGState(new doc.GState({ "stroke-opacity": 1 }));
+    doc.setLineDashPattern([], 0);
+  }
+
+  /* ---------- preview ---------- */
+  var pv = $("pv"), pctx = pv.getContext("2d");
+  function firstResult() {
+    for (var i = 0; i < S.results.length; i++) if (S.results[i].count > 0) return S.results[i];
+    return S.results[0] || null;
+  }
+  function drawOpened(L) {
+    var s = 8, m = 3, x = m, y = m;
+    pv.width = Math.round((L.cw + 2 * m) * s); pv.height = Math.round((L.ch + 2 * m) * s);
+    pctx.clearRect(0, 0, pv.width, pv.height);
+    pctx.save(); pctx.shadowColor = "rgba(0,0,0,.4)"; pctx.shadowBlur = 12; pctx.shadowOffsetY = 4;
+    pctx.fillStyle = "#fff"; pctx.beginPath(); rrPath(pctx, x * s, y * s, L.cw * s, L.ch * s, L.r * s); pctx.fill(); pctx.restore();
+    var r = firstResult(); if (r) drawResult(pctx, r, x, y, s, L);
+    pctx.save(); pctx.beginPath(); rrPath(pctx, x * s, y * s, L.cw * s, L.ch * s, L.r * s); pctx.clip();
+    pctx.beginPath();
+    pctx.rect(x * s, y * s, L.cw * s, L.band * s);
+    pctx.rect(x * s, (y + L.ch - L.band) * s, L.cw * s, L.band * s);
+    pctx.rect((x + L.cw - L.hinge) * s, y * s, L.hinge * s, L.ch * s);
+    pctx.clip();
+    drawCover(pctx, S.front, x, y, L.cw, L.ch, s);
+    pctx.restore();
+    var top = (y + L.band) * s, bot = (y + L.ch - L.band) * s, hx = (x + L.cw - L.hinge) * s;
+    pctx.save(); pctx.strokeStyle = "rgba(0,0,0,.25)"; pctx.lineWidth = 3;
+    pctx.beginPath(); pctx.moveTo(x * s, top + 1.5); pctx.lineTo(hx, top + 1.5); pctx.moveTo(x * s, bot - 1.5); pctx.lineTo(hx, bot - 1.5);
+    pctx.moveTo(hx - 1.5, top); pctx.lineTo(hx - 1.5, bot); pctx.stroke();
+    pctx.strokeStyle = "rgba(255,255,255,.9)"; pctx.lineWidth = 1.5; pctx.setLineDash([4, 3]);
+    pctx.beginPath(); pctx.moveTo(x * s, top); pctx.lineTo(hx, top); pctx.moveTo(x * s, bot); pctx.lineTo(hx, bot); pctx.stroke();
+    pctx.restore();
+    pctx.save(); pctx.strokeStyle = "rgba(0,0,0,.35)"; pctx.lineWidth = 1; pctx.beginPath(); rrPath(pctx, x * s, y * s, L.cw * s, L.ch * s, L.r * s); pctx.stroke(); pctx.restore();
+  }
+  function drawSheet(L, which) {
+    var s = 4;
+    pv.width = PAGE.w * s; pv.height = PAGE.h * s;
+    if (which === "front") { paintFront(pctx, s, L); strokeCanvas(pctx, frontOps(L), s); }
+    else { paintBack(pctx, s, L, S.backPage, assignment()); strokeCanvas(pctx, backOps(L), s); }
+  }
+  var queued = false;
+  function render() { if (queued) return; queued = true; requestAnimationFrame(function () { queued = false; renderNow(); }); }
+  function renderNow() {
+    var L = layout();
+    S.backPage = Math.min(S.backPage, S.sheets - 1);
+    pv.className = S.view === "open" ? "card" : "sheet";
+    if (S.view === "open") drawOpened(L); else drawSheet(L, S.view);
+    $("pvCaption").textContent = S.view === "open" ? "띠를 뜯었을 때 결과 그림이 이렇게 보여요."
+      : S.view === "front" ? "앞판 인쇄면이에요. 흰 점선이 절취선, 오른쪽 세로선이 접는 선이에요."
+      : "뒷판 인쇄면이에요. 결과 그림이 띠 아래 가운데에 들어가요.";
+    var showPager = S.view === "back" && S.sheets > 1;
+    $("pager").hidden = !showPager;
+    $("pgLabel").textContent = (S.backPage + 1) + " / " + S.sheets;
+    $("pgPrev").disabled = S.backPage <= 0; $("pgNext").disabled = S.backPage >= S.sheets - 1;
+    updateTexts(L);
+  }
+
+  /* ---------- UI state ---------- */
+  function updateTexts(L) {
+    $("specLine").textContent = L.cw + " × " + L.ch + " mm · A4 한 장에 " + L.per + "개";
+    var cap = L.per * S.sheets, total = S.results.reduce(function (a, r) { return a + r.count; }, 0);
+    $("sheetHint").textContent = "앞판 " + S.sheets + "장 + 뒷판 " + S.sheets + "장 · 쿠지 " + cap + "개";
+    var t = $("tally");
+    if (total > cap) { t.className = "tally warn"; t.textContent = "결과 그림이 " + total + "개인데 칸은 " + cap + "개예요. 개수를 줄이거나 4단계에서 인쇄 장수를 늘려주세요."; }
+    else if (total < cap) { t.className = "tally"; t.textContent = "결과 " + total + "개 / 전체 " + cap + "칸 · 남는 " + (cap - total) + "칸은 결과 없이 빈칸으로 나와요."; }
+    else { t.className = "tally"; t.textContent = "결과 " + total + "개 / 전체 " + cap + "칸 · 딱 맞아요."; }
+    $("makeBtn").disabled = total > cap || !S.front;
+    var ms = maxSize(L), sr = $("sizeRange");
+    sr.max = ms; if (S.size > ms) { S.size = ms; sr.value = ms; }
+    $("sizeOut").textContent = S.size + " mm";
+    $("edgeOut").textContent = S.edge + "%";
+  }
+  function renderFrontInfo() {
+    $("frontThumb").src = S.front.toDataURL("image/jpeg", .8);
+    if (S.frontSample) {
+      $("frontTitle").innerHTML = '앞판 그림 고르기 <span class="tag">예시 표시 중</span>';
+      $("frontSub").textContent = "눌러서 사진이나 그림 파일을 선택하세요";
+      $("frontMsg").textContent = ""; return;
+    }
+    $("frontTitle").textContent = "앞판 그림 바꾸기";
+    $("frontSub").textContent = S.frontName + " · " + S.front.width + "×" + S.front.height + "px";
+    var L = layout(), target = (L.cw + 2 * BLEED) / (L.ch + 2 * BLEED), ratio = S.front.width / S.front.height, msg = $("frontMsg");
+    if (Math.abs(ratio / (L.cw / L.ch) - 1) > .04) {
+      msg.className = "msg warn";
+      msg.textContent = "그림 비율이 " + L.cw / 10 + ":" + L.ch / 10 + "과 달라서 " + (ratio > target ? "좌우" : "위아래") + "가 조금 잘려요. 미리보기로 확인해보세요.";
+    } else { msg.className = "msg ok"; msg.textContent = "비율이 잘 맞아요."; }
+    var px = S.front.width / ((L.cw + 2 * BLEED) / 25.4);
+    if (px < 200) { msg.className = "msg warn"; msg.textContent += " 해상도가 낮아서 인쇄하면 흐릿할 수 있어요."; }
+  }
+  function renderResults() {
+    var box = $("resultList"); box.innerHTML = "";
+    S.results.forEach(function (r, idx) {
+      var row = document.createElement("div"); row.className = "r-item" + (S.shape === "circle" ? "" : " square");
+      var img = document.createElement("img"); img.alt = r.name; img.src = thumbURL(r);
+      var nm = document.createElement("div"); nm.className = "r-name"; nm.textContent = r.name;
+      if (r.sample) { var tg = document.createElement("span"); tg.className = "tag"; tg.textContent = "예시"; nm.appendChild(document.createTextNode(" ")); nm.appendChild(tg); }
+      var st = document.createElement("span"); st.className = "stepper";
+      var minus = document.createElement("button"); minus.type = "button"; minus.textContent = "−"; minus.setAttribute("aria-label", r.name + " 개수 줄이기");
+      var inp = document.createElement("input"); inp.type = "number"; inp.min = "0"; inp.max = "999"; inp.value = r.count; inp.id = "cnt" + idx; inp.setAttribute("aria-label", r.name + " 개수");
+      var plus = document.createElement("button"); plus.type = "button"; plus.textContent = "+"; plus.setAttribute("aria-label", r.name + " 개수 늘리기");
+      minus.onclick = function () { r.count = Math.max(0, r.count - 1); inp.value = r.count; render(); };
+      plus.onclick = function () { r.count = Math.min(999, r.count + 1); inp.value = r.count; render(); };
+      inp.oninput = function () { var v = parseInt(inp.value, 10); r.count = isNaN(v) ? 0 : Math.max(0, Math.min(999, v)); render(); };
+      st.append(minus, inp, plus);
+      var del = document.createElement("button"); del.type = "button"; del.className = "icon-btn"; del.textContent = "×"; del.setAttribute("aria-label", r.name + " 빼기");
+      del.onclick = function () { S.results.splice(idx, 1); renderResults(); render(); };
+      row.append(img, nm, st, del); box.appendChild(row);
+    });
+    if (!S.results.length) { var p = document.createElement("p"); p.className = "hint"; p.textContent = "아직 결과 그림이 없어요. 아래 버튼으로 추가하세요."; box.appendChild(p); }
+  }
+
+  /* ---------- events ---------- */
+  $("frontInput").addEventListener("change", function (e) {
+    var f = e.target.files && e.target.files[0]; if (!f) return;
+    loadFile(f, 2000).then(function (cv) {
+      S.front = cv; S.frontSample = false; S.frontName = f.name; renderFrontInfo(); render();
+    }).catch(function (err) { $("frontMsg").className = "msg warn"; $("frontMsg").textContent = err.message; });
+    e.target.value = "";
+  });
+  $("resultInput").addEventListener("change", function (e) {
+    var files = Array.prototype.slice.call(e.target.files || []); if (!files.length) return;
+    e.target.value = "";
+    Promise.all(files.map(function (f) { return loadFile(f, 1400).then(function (cv) { return { cv: cv, name: f.name }; }); }))
+      .then(function (list) {
+        S.results = S.results.filter(function (r) { return !r.sample; });
+        var cap = layout().per * S.sheets;
+        list.forEach(function (it) {
+          var used = S.results.reduce(function (a, r) { return a + r.count; }, 0);
+          var left = cap - used;
+          S.results.push({ cv: it.cv, box: contentBox(it.cv), name: it.name.replace(/\.[^.]+$/, ""), count: S.results.length === 0 ? Math.max(1, left) : (left > 0 ? 1 : 0), sample: false });
+        });
+        renderResults(); render();
+      }).catch(function (err) { var t = $("tally"); t.className = "tally warn"; t.textContent = err.message; });
+  });
+  document.querySelectorAll('input[name="shape"]').forEach(function (el) {
+    el.addEventListener("change", function () { S.shape = el.value; renderResults(); render(); });
+  });
+  $("sizeRange").addEventListener("input", function (e) { S.size = +e.target.value; render(); });
+  $("edgeRange").addEventListener("input", function (e) { S.edge = +e.target.value; render(); clearTimeout(window.__thumbT); window.__thumbT = setTimeout(renderResults, 200); });
+  $("trimChk").addEventListener("change", function (e) { S.trim = e.target.checked; renderResults(); render(); });
+  $("guideChk").addEventListener("change", function (e) { S.guides = e.target.checked; render(); });
+  $("cutChk").addEventListener("change", function (e) { S.cutlines = e.target.checked; render(); });
+  function setSheets(n) { S.sheets = Math.max(1, Math.min(10, n || 1)); $("sheetsInput").value = S.sheets; render(); }
+  $("shMinus").onclick = function () { setSheets(S.sheets - 1); };
+  $("shPlus").onclick = function () { setSheets(S.sheets + 1); };
+  $("sheetsInput").addEventListener("change", function (e) { setSheets(parseInt(e.target.value, 10)); });
+  document.querySelectorAll(".tabs button").forEach(function (b) {
+    b.addEventListener("click", function () {
+      S.view = b.dataset.view;
+      document.querySelectorAll(".tabs button").forEach(function (o) { o.setAttribute("aria-selected", String(o === b)); });
+      render();
+    });
+  });
+  $("pgPrev").onclick = function () { S.backPage = Math.max(0, S.backPage - 1); render(); };
+  $("pgNext").onclick = function () { S.backPage = Math.min(S.sheets - 1, S.backPage + 1); render(); };
+  var DIMS = [["dCw", "cw", 30, 140], ["dCh", "ch", 20, 100], ["dBand", "band", 3, 30], ["dHinge", "hinge", 3, 40], ["dR", "r", 0, 10]];
+  DIMS.forEach(function (d) {
+    $(d[0]).addEventListener("change", function (e) {
+      var v = parseFloat(e.target.value); if (isNaN(v)) v = S.dims[d[1]];
+      v = Math.max(d[2], Math.min(d[3], v));
+      if (d[1] === "band") v = Math.min(v, (S.dims.ch - 10) / 2);
+      if (d[1] === "hinge") v = Math.min(v, S.dims.cw / 2);
+      S.dims[d[1]] = v; e.target.value = v;
+      if (!S.frontSample) renderFrontInfo();
+      render();
+    });
+  });
+
+  /* ---------- PDF ---------- */
+  var downloadsP = (window.claude && typeof window.claude.use === "function")
+    ? window.claude.use("downloads").catch(function () { return null; }) : Promise.resolve(undefined);
+  function setStatus(text, cls) { var s = $("status"); s.textContent = text; s.className = "status" + (cls ? " " + cls : ""); }
+  function nextFrame() { return new Promise(function (r) { requestAnimationFrame(function () { setTimeout(r, 30); }); }); }
+
+  $("makeBtn").addEventListener("click", function () {
+    var btn = $("makeBtn");
+    if (!window.jspdf || !window.jspdf.jsPDF) { setStatus("PDF 도구를 불러오지 못했어요. 인터넷 연결을 확인하고 새로고침해 주세요.", "err"); return; }
+    btn.disabled = true; setStatus("PDF를 만드는 중이에요…");
+    nextFrame().then(function () {
+      var L = layout(), s = 300 / 25.4;
+      var doc = new window.jspdf.jsPDF({ orientation: "landscape", unit: "mm", format: "a4", compress: true });
+      var cv = document.createElement("canvas"); cv.width = Math.round(PAGE.w * s); cv.height = Math.round(PAGE.h * s);
+      var ctx = cv.getContext("2d");
+      paintFront(ctx, s, L);
+      var frontData = cv.toDataURL("image/jpeg", .92);
+      var fOps = frontOps(L), bOps = backOps(L), assigned = assignment();
+      for (var k = 0; k < S.sheets; k++) {
+        if (k > 0) doc.addPage("a4", "landscape");
+        doc.addImage(frontData, "JPEG", 0, 0, PAGE.w, PAGE.h, "front", "FAST");
+        strokePdf(doc, fOps);
+      }
+      for (var p = 0; p < S.sheets; p++) {
+        doc.addPage("a4", "landscape");
+        paintBack(ctx, s, L, p, assigned);
+        doc.addImage(cv.toDataURL("image/jpeg", .92), "JPEG", 0, 0, PAGE.w, PAGE.h, "back" + p, "FAST");
+        strokePdf(doc, bOps);
+      }
+      var name = "쿠지_인쇄판_" + S.sheets + "장.pdf";
+      var blob = doc.output("blob");
+      return downloadsP.then(function (dl) {
+        if (dl === undefined) { doc.save(name); return "saved"; }
+        if (!dl) { doc.save(name); throw { code: "unavailable" }; }
+        return dl.save({ filename: name, data: blob }).then(function () { return "saved"; });
+      });
+    }).then(function () {
+      setStatus("PDF를 저장했어요. 앞판 " + S.sheets + "장, 뒷판 " + S.sheets + "장 순서로 들어 있어요.", "ok");
+    }).catch(function (err) {
+      var code = err && err.code;
+      if (code === "declined") setStatus("저장을 취소했어요. 다시 누르면 새로 만들어요.", "err");
+      else if (code === "rate_limited") setStatus("저장 창이 이미 열려 있어요. 잠시 후 다시 눌러주세요.", "err");
+      else if (code === "unavailable" || code === "not_granted" || code === "capability_disabled" || code === "capability_removed")
+        setStatus("이 화면에서는 파일 저장이 막혀 있어요. 크롬이나 Claude 앱에서 이 페이지를 열어 다시 시도해 주세요.", "err");
+      else setStatus("PDF를 만들지 못했어요. 그림 크기를 줄이거나 장수를 줄여서 다시 시도해 주세요.", "err");
+    }).then(function () { btn.disabled = false; render(); });
+  });
+
+  /* ---------- boot ---------- */
+  function boot() { makeSamples(); renderFrontInfo(); renderResults(); render(); }
+  boot();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () {
+    if (S.frontSample) { S.front = sampleFront(); }
+    if (S.results.length && S.results.every(function (r) { return r.sample; })) makeSamples();
+    renderFrontInfo(); renderResults(); render();
+  });
+})();
+</script>
+
+</body>
+</html>
