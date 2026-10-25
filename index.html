@@ -51,6 +51,8 @@ body { background: var(--bg); color: var(--ink); font-family: var(--font-body); 
 header { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 8px 20px; margin-bottom: 18px; }
 h1 { font-family: var(--font-display); font-weight: 400; font-size: 2.1rem; line-height: 1.1; margin: 0; letter-spacing: -.01em; }
 header p { margin: 4px 0 0; color: var(--muted); }
+header a { color: var(--accent); font-weight: 500; text-decoration: none; }
+header a:hover { text-decoration: underline; }
 .mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
 .spec { font-size: .82rem; color: var(--accent); background: var(--accent-soft); padding: 4px 10px; border-radius: 999px; white-space: nowrap; }
 
@@ -144,7 +146,7 @@ button:focus-visible, .btn:focus-visible, .drop:focus-within, input:focus-visibl
   <header>
     <div>
       <h1>쿠지 인쇄판</h1>
-      <p>앞판 그림과 결과 그림만 넣으면 A4 인쇄용 PDF를 만들어요.</p>
+      <p>앞판 그림과 결과 그림만 넣으면 A4 인쇄용 PDF를 만들어요. · <a href="board.html">경품 현황판 만들기</a></p>
     </div>
     <span class="spec mono" id="specLine">70 × 50 mm · A4 한 장에 16개</span>
   </header>
